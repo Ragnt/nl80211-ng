@@ -1,7 +1,3 @@
-use std::clone;
-
-use crate::attr::Nl80211ChanWidth;
-use crate::attr::Nl80211ChannelType;
 use crate::attr::Nl80211Iftype;
 use crate::attr::Operstate;
 use crate::channels::pretty_print_band_lists;
