@@ -2,6 +2,8 @@
 name = "nl80211-ng"
 version = "0.1.0"
 edition = "2021"
+description = "Basic nl80211 crate for interacting with Netlink / Rtnetlink and manipulating WiFi interfaces."
+license = "MIT"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
