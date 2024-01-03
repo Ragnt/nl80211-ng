@@ -8,15 +8,17 @@ use crate::phy::WirelessPhy;
 use crate::util::decode_iftypes;
 use crate::{NL_80211_GENL_NAME, NL_80211_GENL_VERSION};
 use neli::attr::{AttrHandle, Attribute};
-
 use neli::consts::{nl::NlmF, nl::NlmFFlags, nl::Nlmsg, socket::NlFamily};
+use neli::genl::AttrType;
 use neli::genl::{Genlmsghdr, Nlattr};
 use neli::nl::{NlPayload, Nlmsghdr};
 use neli::socket::NlSocketHandle;
 use neli::types::{Buffer, GenlBuffer};
+use neli::ToBytes;
 
 use std::collections::HashMap;
 use std::fs;
+use std::io::Cursor;
 
 /// A generic netlink socket to send commands and receive messages
 pub struct NtSocket {
@@ -422,7 +424,7 @@ impl NtSocket {
         &mut self,
         interface_index: i32,
         iftype: Nl80211Iftype,
-        active: Option<bool>,
+        active: bool,
     ) -> Result<(), String> {
         let msghdr = Genlmsghdr::<Nl80211Cmd, Nl80211Attr>::new(
             Nl80211Cmd::CmdSetInterface,
@@ -432,21 +434,34 @@ impl NtSocket {
                 attrs.push(
                     Nlattr::new(false, false, Nl80211Attr::AttrIfindex, interface_index).unwrap(),
                 );
-                let iftype_value: u16 = iftype.into();
-                let mut iftype_attr =
-                    Nlattr::new(true, false, Nl80211Attr::AttrIftype, iftype_value as u32).unwrap();
-                if iftype == Nl80211Iftype::IftypeMonitor && active.is_some_and(|f| f) {
-                    let _ = iftype_attr.add_nested_attribute(
-                        &Nlattr::new(
+                attrs.push(
+                    Nlattr::new(
+                        false,
+                        false,
+                        Nl80211Attr::AttrIftype,
+                        u16::from(iftype) as u32,
+                    )
+                    .unwrap(),
+                );
+                if iftype == Nl80211Iftype::IftypeMonitor && active {
+                    attrs.push(
+                        Nlattr::new(
                             false,
                             false,
                             Nl80211Attr::AttrMntrFlags,
-                            Nl80211MntrFlags::MntrFlagActive,
+                            Nlattr {
+                                nla_len: 4,
+                                nla_type: AttrType {
+                                    nla_nested: false,
+                                    nla_network_order: false,
+                                    nla_type: Nl80211MntrFlags::MntrFlagActive,
+                                },
+                                nla_payload: Buffer::new(),
+                            },
                         )
                         .unwrap(),
                     );
                 }
-                attrs.push(iftype_attr);
                 attrs
             },
         );
@@ -466,7 +481,7 @@ impl NtSocket {
 
         let iter = self
             .sock
-            .iter::<Nlmsg, Genlmsghdr<Nl80211Cmd, Nl80211Attr>>(false);
+            .iter::<Nlmsg, Genlmsghdr<Nl80211Cmd, Nl80211Attr>>(true);
 
         for response in iter.flatten() {
             match response.nl_type {
@@ -484,7 +499,7 @@ impl NtSocket {
                     }
                 },
                 Nlmsg::Done => break,
-                _ => (), //println!("{:#?}", response),
+                _ => (), //println!("Response: {:#?}", response.nl_payload),
             }
         }
         Ok(())

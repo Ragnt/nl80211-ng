@@ -9,7 +9,7 @@ pub mod util;
 
 use attr::{Nl80211ChanWidth, Nl80211ChannelType, Nl80211Iftype, Operstate};
 use channels::WiFiChannel;
-use interface::Interface;
+pub use interface::Interface;
 use ntsocket::NtSocket;
 use phy::WirelessPhy;
 use rtsocket::RtSocket;
@@ -91,14 +91,14 @@ impl Nl80211 {
 
     pub fn set_interface_monitor(&mut self, active: bool, index: i32) -> Result<(), String> {
         self.nt_socket
-            .set_type_vec(index, Nl80211Iftype::IftypeMonitor, Some(active))?;
-        self.update_interfaces()?;
+            .set_type_vec(index, Nl80211Iftype::IftypeMonitor, active)?;
+        //self.update_interfaces()?;
         Ok(())
     }
 
     pub fn set_interface_station(&mut self, index: i32) -> Result<(), String> {
         self.nt_socket
-            .set_type_vec(index, Nl80211Iftype::IftypeStation, None)?;
+            .set_type_vec(index, Nl80211Iftype::IftypeStation, false)?;
         self.update_interfaces()?;
         Ok(())
     }
@@ -195,11 +195,10 @@ pub fn get_interface_info_name(interface_name: &String) -> Result<Interface, Str
         if wiphys.contains_key(phy) {
             interface.phy = wiphys.get(phy).cloned();
             interface.state = Some(rt_socket.get_interface_status(interface.index)?);
+        } else {
+            return Err("Phy does not exist...".to_string());
         }
-        let ifname = String::from_utf8(interface.name.clone().unwrap())
-            .unwrap()
-            .to_string();
-        if &ifname == interface_name {
+        if &interface.name_as_string() == interface_name {
             return Ok(interface.clone());
         }
     }
@@ -208,13 +207,13 @@ pub fn get_interface_info_name(interface_name: &String) -> Result<Interface, Str
 
 pub fn set_interface_monitor(interface_index: i32, active: bool) -> Result<(), String> {
     let mut nt_socket = NtSocket::connect()?;
-    nt_socket.set_type_vec(interface_index, Nl80211Iftype::IftypeMonitor, Some(active))?;
+    nt_socket.set_type_vec(interface_index, Nl80211Iftype::IftypeMonitor, active)?;
     Ok(())
 }
 
 pub fn set_interface_station(interface_index: i32) -> Result<(), String> {
     let mut nt_socket = NtSocket::connect()?;
-    nt_socket.set_type_vec(interface_index, Nl80211Iftype::IftypeStation, None)?;
+    nt_socket.set_type_vec(interface_index, Nl80211Iftype::IftypeStation, false)?;
     Ok(())
 }
 
