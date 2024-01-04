@@ -11,7 +11,7 @@ use crate::util::wrap_in_box;
 #[non_exhaustive]
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Interface {
-    pub index: i32,                            // AttrIfindex
+    pub index: Option<i32>,                    // AttrIfindex
     pub ssid: Option<Vec<u8>>,                 // AttrSsid
     pub mac: Option<Vec<u8>>,                  // AttrMac
     pub name: Option<Vec<u8>>,                 // AttrIfname
@@ -24,9 +24,9 @@ pub struct Interface {
 }
 
 impl Interface {
-    pub fn new(index: i32, wiphy: u32) -> Interface {
+    pub fn new(wiphy: u32) -> Interface {
         Interface {
-            index,
+            index: None,
             ssid: None,
             mac: None,
             name: None,
@@ -50,7 +50,11 @@ impl Interface {
     }
 
     pub fn index_as_string(&self) -> String {
-        self.index.to_string()
+        if let Some(index) = self.index {
+            index.to_string()
+        } else {
+            "".to_string()
+        }
     }
 
     pub fn driver_as_string(&self) -> String {

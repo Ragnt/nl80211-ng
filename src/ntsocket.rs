@@ -81,13 +81,8 @@ impl NtSocket {
                             .unwrap()
                             .get_payload_as()
                             .unwrap();
-                        let index: i32 = handle
-                            .get_attribute(Nl80211Attr::AttrIfindex)
-                            .unwrap()
-                            .get_payload_as()
-                            .unwrap();
 
-                        let mut interface = Interface::new(index, wiphy);
+                        let mut interface = Interface::new(wiphy);
 
                         // Get iftype
                         let iftype = Nl80211Iftype::from_u8(
@@ -103,6 +98,11 @@ impl NtSocket {
                         // Iterate other attributes
                         for attr in handle.iter() {
                             match attr.nla_type.nla_type {
+                                // IfIndex (eg: wlan0)
+                                Nl80211Attr::AttrIfindex => {
+                                    interface.index =
+                                        Some(attr.get_payload_as().map_err(|err| err.to_string())?);
+                                }
                                 // IFNAME (eg: wlan0)
                                 Nl80211Attr::AttrIfname => {
                                     interface.name = Some(

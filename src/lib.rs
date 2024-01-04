@@ -37,8 +37,10 @@ impl Nl80211 {
 
         for (phy, interface) in &mut interfaces {
             if wirelessphys.contains_key(&phy) {
-                interface.phy = wirelessphys.get(&phy).cloned();
-                interface.state = Some(rt_socket.get_interface_status(interface.index)?);
+                if let Some(index) = interface.index {
+                    interface.phy = wirelessphys.get(&phy).cloned();
+                    interface.state = Some(rt_socket.get_interface_status(index)?);
+                }
             }
         }
 
@@ -57,8 +59,10 @@ impl Nl80211 {
 
         for (phy, interface) in &mut interfaces {
             if wirelessphys.contains_key(&phy) {
-                interface.phy = wirelessphys.get(&phy).cloned();
-                interface.state = Some(self.rt_socket.get_interface_status(interface.index)?);
+                if let Some(index) = interface.index {
+                    interface.phy = wirelessphys.get(&phy).cloned();
+                    interface.state = Some(self.rt_socket.get_interface_status(index)?);
+                }
             }
         }
         self.interfaces = interfaces;
@@ -158,8 +162,10 @@ fn get_interfaces_info() -> Result<HashMap<u32, Interface>, String> {
 
     for (phy, interface) in &mut interfaces {
         if wiphys.contains_key(phy) {
-            interface.phy = wiphys.get(&phy).cloned();
-            interface.state = Some(rt_socket.get_interface_status(interface.index)?);
+            if let Some(index) = interface.index {
+                interface.phy = wiphys.get(&phy).cloned();
+                interface.state = Some(rt_socket.get_interface_status(index)?);
+            }
         }
     }
     Ok(interfaces)
@@ -173,12 +179,14 @@ pub fn get_interface_info_idx(interface_index: i32) -> Result<Interface, String>
     let mut interfaces: HashMap<u32, Interface> = nt_socket.cmd_get_interfaces()?;
 
     for (phy, interface) in &mut interfaces {
-        if wiphys.contains_key(phy) {
-            interface.phy = wiphys.get(phy).cloned();
-            interface.state = Some(rt_socket.get_interface_status(interface.index)?);
-        }
-        if interface.index == interface_index {
-            return Ok(interface.clone());
+        if let Some(index) = interface.index {
+            if wiphys.contains_key(phy) {
+                interface.phy = wiphys.get(phy).cloned();
+                interface.state = Some(rt_socket.get_interface_status(index)?);
+            }
+            if index == interface_index {
+                return Ok(interface.clone());
+            }
         }
     }
     Err("Interface Not Found".to_string())
@@ -192,14 +200,16 @@ pub fn get_interface_info_name(interface_name: &String) -> Result<Interface, Str
     let mut interfaces: HashMap<u32, Interface> = nt_socket.cmd_get_interfaces()?;
 
     for (phy, interface) in &mut interfaces {
-        if wiphys.contains_key(phy) {
-            interface.phy = wiphys.get(phy).cloned();
-            interface.state = Some(rt_socket.get_interface_status(interface.index)?);
-        } else {
-            return Err("Phy does not exist...".to_string());
-        }
-        if &interface.name_as_string() == interface_name {
-            return Ok(interface.clone());
+        if let Some(index) = interface.index {
+            if wiphys.contains_key(phy) {
+                interface.phy = wiphys.get(phy).cloned();
+                interface.state = Some(rt_socket.get_interface_status(index)?);
+            } else {
+                return Err("Phy does not exist...".to_string());
+            }
+            if &interface.name_as_string() == interface_name {
+                return Ok(interface.clone());
+            }
         }
     }
     Err("Interface Not Found".to_string())

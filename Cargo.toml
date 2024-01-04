@@ -1,6 +1,6 @@
 [package]
 name = "nl80211-ng"
-version = "0.1.2"
+version = "0.1.3"
 edition = "2021"
 description = "Basic nl80211 crate for interacting with Netlink / Rtnetlink and manipulating WiFi interfaces."
 license = "MIT"
