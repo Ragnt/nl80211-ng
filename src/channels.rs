@@ -121,7 +121,7 @@ impl WiFiChannel {
     pub fn new(channel: u8) -> Option<WiFiChannel> {
         match channel {
             1..=14 => Some(WiFiChannel::Channel2GHz(channel)),
-            36 | 38 | 40 | 42 | 44 | 46 | 48 | 50 | 52 | 54 | 56 | 58 | 60 | 62 | 64 | 100
+            34 | 36 | 38 | 40 | 42 | 44 | 46 | 48 | 50 | 52 | 54 | 56 | 58 | 60 | 62 | 64 | 100
             | 102 | 104 | 106 | 108 | 110 | 112 | 114 | 116 | 118 | 120 | 122 | 124 | 126 | 128
             | 130 | 132 | 134 | 136 | 138 | 140 | 142 | 144 | 146 | 148 | 149 | 151 | 153 | 155
             | 157 | 159 | 161 | 165 => Some(WiFiChannel::Channel5GHz(channel)),
