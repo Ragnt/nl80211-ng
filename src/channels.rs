@@ -194,6 +194,7 @@ impl WiFiChannel {
             4980 => Some(WiFiChannel::Channel5GHz(196)),
 
             // Standard 5 GHz frequencies
+            5170 => Some(WiFiChannel::Channel5GHz(34)),
             5180 => Some(WiFiChannel::Channel5GHz(36)),
             5190 => Some(WiFiChannel::Channel5GHz(38)),
             5200 => Some(WiFiChannel::Channel5GHz(40)),
