@@ -9,6 +9,15 @@ pub enum WiFiBand {
     Band5GHz,
 }
 
+impl WiFiBand {
+    pub fn to_u8(&self) -> u8 {
+        match self {
+            WiFiBand::Band2GHz => 2,
+            WiFiBand::Band5GHz => 5,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct ChannelData {
     pub frequency: u32,
@@ -81,8 +90,8 @@ pub enum FrequencyStatus {
 
 #[derive(Debug, PartialEq, Clone, Eq)]
 pub enum WiFiChannel {
-    Channel2GHz(u8),
-    Channel5GHz(u8),
+    Channel2GHz(u16),
+    Channel5GHz(u16),
 }
 
 #[allow(clippy::incorrect_partial_ord_impl_on_ord_type)]
@@ -118,7 +127,7 @@ impl fmt::Display for WiFiChannel {
 }
 
 impl WiFiChannel {
-    pub fn new(channel: u8) -> Option<WiFiChannel> {
+    pub fn new(channel: u16) -> Option<WiFiChannel> {
         match channel {
             1..=14 => Some(WiFiChannel::Channel2GHz(channel)),
             34 | 36 | 38 | 40 | 42 | 44 | 46 | 48 | 50 | 52 | 54 | 56 | 58 | 60 | 62 | 64 | 100
@@ -129,7 +138,7 @@ impl WiFiChannel {
         }
     }
 
-    pub fn get_channel_number(&self) -> u8 {
+    pub fn get_channel_number(&self) -> u16 {
         match self {
             WiFiChannel::Channel2GHz(channel) => *channel,
             WiFiChannel::Channel5GHz(channel) => *channel,
