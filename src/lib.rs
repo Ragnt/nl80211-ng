@@ -107,7 +107,7 @@ impl Nl80211 {
         Ok(())
     }
 
-    pub fn set_interface_chan(&mut self, index: i32, channel: u16) -> Result<(), String> {
+    pub fn set_interface_chan(&mut self, index: i32, channel: u8) -> Result<(), String> {
         self.nt_socket.set_frequency(
             index,
             WiFiChannel::new(channel).unwrap().to_frequency().unwrap(),
@@ -227,7 +227,7 @@ pub fn set_interface_station(interface_index: i32) -> Result<(), String> {
     Ok(())
 }
 
-pub fn set_interface_chan(interface_index: i32, channel: u16) -> Result<(), String> {
+pub fn set_interface_chan(interface_index: i32, channel: u8) -> Result<(), String> {
     let mut nt_socket = NtSocket::connect()?;
     nt_socket.set_frequency(
         interface_index,

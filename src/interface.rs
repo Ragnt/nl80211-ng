@@ -40,15 +40,15 @@ impl Interface {
         }
     }
 
-    pub fn get_frequency_list_simple(&self) -> Option<HashMap<u8, Vec<u16>>> {
+    pub fn get_frequency_list_simple(&self) -> Option<HashMap<u8, Vec<u8>>> {
         match &self.phy {
             Some(wirelessphy) => {
                 let phy = wirelessphy.clone();
-                let mut map: HashMap<u8, Vec<u16>> = HashMap::new();
+                let mut map: HashMap<u8, Vec<u8>> = HashMap::new();
                 let freq_list = phy.frequency_list.unwrap();
                 for band in freq_list {
                     let bandu8 = band.band.to_u8();
-                    let mut channels: Vec<u16> = Vec::new();
+                    let mut channels: Vec<u8> = Vec::new();
                     for channel in band.channels {
                         channels.push(channel.channel.get_channel_number())
                     }
