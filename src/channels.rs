@@ -42,7 +42,7 @@ static CHANNELS_6GHZ_U8: [u8; 59] = [
 
 static CHANNELS_60GHZ_U8: [u8; 6] = [1, 2, 3, 4, 5, 6];
 
-fn map_str_to_band_and_channel(channel_str: &str) -> Option<(WiFiBand, u8)> {
+pub fn map_str_to_band_and_channel(channel_str: &str) -> Option<(WiFiBand, u8)> {
     if CHANNELS_2GHZ_STR.contains(&channel_str) {
         channel_str.parse().ok().map(|ch| (WiFiBand::Band2GHz, ch))
     } else if CHANNELS_5GHZ_STR.contains(&channel_str) {
