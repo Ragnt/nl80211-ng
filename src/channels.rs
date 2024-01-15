@@ -136,8 +136,8 @@ pub fn pretty_print_band_lists(band_lists: &[BandList]) -> String {
                 let channel_str = match channel.channel {
                     WiFiChannel::Channel2GHz(ch) => format!("{}", ch),
                     WiFiChannel::Channel5GHz(ch) => format!("{}", ch),
-                    WiFiChannel::Channel6GHz(ch) => todo!(),
-                    WiFiChannel::Channel60GHz(ch) => todo!(),
+                    WiFiChannel::Channel6GHz(ch) => format!("{}", ch),
+                    WiFiChannel::Channel60GHz(ch) => format!("{}", ch),
                 };
 
                 line += &format!("    [{} ({})]", channel.frequency, channel_str);
