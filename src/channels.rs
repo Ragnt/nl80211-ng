@@ -249,12 +249,12 @@ impl WiFiChannel {
         }
     }
 
-    pub fn get_default_width(&self) -> u8 {
+    pub fn get_band(&self) -> WiFiBand {
         match self {
-            WiFiChannel::Channel2GHz(channel) => *channel,
-            WiFiChannel::Channel5GHz(channel) => *channel,
-            WiFiChannel::Channel6GHz(channel) => *channel,
-            WiFiChannel::Channel60GHz(channel) => *channel,
+            WiFiChannel::Channel2GHz(channel) => WiFiBand::Band2GHz,
+            WiFiChannel::Channel5GHz(channel) => WiFiBand::Band5GHz,
+            WiFiChannel::Channel6GHz(channel) => WiFiBand::Band6GHz,
+            WiFiChannel::Channel60GHz(channel) => WiFiBand::Band60GHz,
         }
     }
 
