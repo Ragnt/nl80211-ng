@@ -8,7 +8,7 @@ pub mod rtsocket;
 pub mod util;
 
 use attr::{Nl80211ChanWidth, Nl80211ChannelType, Nl80211Iftype, Operstate};
-use channels::WiFiChannel;
+use channels::{WiFiBand, WiFiChannel};
 pub use interface::Interface;
 use ntsocket::NtSocket;
 use phy::WirelessPhy;
@@ -107,10 +107,14 @@ impl Nl80211 {
         Ok(())
     }
 
-    pub fn set_interface_chan(&mut self, index: i32, channel: u8) -> Result<(), String> {
+    pub fn set_interface_chan(&mut self, index: i32, channel: u8, band: u8) -> Result<(), String> {
+        let band = WiFiBand::from_u8(band)?;
         self.nt_socket.set_frequency(
             index,
-            WiFiChannel::new(channel).unwrap().to_frequency().unwrap(),
+            WiFiChannel::new(channel, band)
+                .unwrap()
+                .to_frequency()
+                .unwrap(),
             Nl80211ChanWidth::ChanWidth20Noht,
             Nl80211ChannelType::ChanNoHt,
         )?;
@@ -227,11 +231,15 @@ pub fn set_interface_station(interface_index: i32) -> Result<(), String> {
     Ok(())
 }
 
-pub fn set_interface_chan(interface_index: i32, channel: u8) -> Result<(), String> {
+pub fn set_interface_chan(interface_index: i32, channel: u8, band: u8) -> Result<(), String> {
     let mut nt_socket = NtSocket::connect()?;
+    let band = WiFiBand::from_u8(band)?;
     nt_socket.set_frequency(
         interface_index,
-        WiFiChannel::new(channel).unwrap().to_frequency().unwrap(),
+        WiFiChannel::new(channel, band)
+            .unwrap()
+            .to_frequency()
+            .unwrap(),
         Nl80211ChanWidth::ChanWidth20Noht,
         Nl80211ChannelType::ChanNoHt,
     )?;

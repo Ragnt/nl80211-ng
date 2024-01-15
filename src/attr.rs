@@ -1040,6 +1040,9 @@ pub enum Nl80211Bandc {
     Band2ghz = 0,
     Band5ghz = 1,
     Band60ghz = 2,
+    Band6ghz = 3,
+    BandS1ghz = 4,
+    BandLC = 5,
 }
 
 impl NlAttrType for Nl80211Bandc {}

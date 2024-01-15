@@ -5,7 +5,16 @@ pub fn decode_iftypes(bytes: Vec<u8>) -> Vec<Nl80211Iftype> {
         .chunks(4)
         .filter_map(|chunk| {
             if chunk.len() == 4 {
-                match chunk[2] {
+                // Convert the chunk into an array of length 4
+                let chunk_array: [u8; 4] = chunk.try_into().expect("slice with incorrect length");
+
+                // Interpret the chunk as two u16s
+                let (len, typecode) = (
+                    u16::from_ne_bytes([chunk_array[0], chunk_array[1]]),
+                    u16::from_ne_bytes([chunk_array[2], chunk_array[3]]),
+                );
+
+                match typecode {
                     0 => Some(Nl80211Iftype::IftypeUnspecified),
                     1 => Some(Nl80211Iftype::IftypeAdhoc),
                     2 => Some(Nl80211Iftype::IftypeStation),
@@ -13,7 +22,11 @@ pub fn decode_iftypes(bytes: Vec<u8>) -> Vec<Nl80211Iftype> {
                     4 => Some(Nl80211Iftype::IftypeApVlan),
                     6 => Some(Nl80211Iftype::IftypeMonitor),
                     7 => Some(Nl80211Iftype::IftypeMeshPoint),
-                    // Add other cases as needed
+                    8 => Some(Nl80211Iftype::IftypeP2pClient),
+                    9 => Some(Nl80211Iftype::IftypeP2pGo),
+                    10 => Some(Nl80211Iftype::IftypeP2pDevice),
+                    11 => Some(Nl80211Iftype::IftypeOcb),
+                    12 => Some(Nl80211Iftype::IftypeNan),
                     _ => None,
                 }
             } else {

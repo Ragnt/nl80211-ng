@@ -85,14 +85,16 @@ impl NtSocket {
                         let mut interface = Interface::new(wiphy);
 
                         // Get iftype
-                        let iftype = Nl80211Iftype::from_u8(
-                            handle
-                                .get_attribute(Nl80211Attr::AttrIftype)
-                                .unwrap()
-                                .get_payload_as()
-                                .unwrap(),
-                        )
-                        .unwrap_or(Nl80211Iftype::IftypeUnspecified);
+                        let iftype_payload: u32 = handle
+                            .get_attribute(Nl80211Attr::AttrIftype)
+                            .unwrap()
+                            .get_payload_as()
+                            .unwrap();
+
+                        let lsb: u8 = (iftype_payload & 0xFF) as u8;
+
+                        let iftype =
+                            Nl80211Iftype::from_u8(lsb).unwrap_or(Nl80211Iftype::IftypeUnspecified);
                         interface.current_iftype = Some(iftype);
 
                         // Iterate other attributes
@@ -156,6 +158,8 @@ impl NtSocket {
                                 _ => (),
                             }
                         }
+
+                        //println!("{:#?} :: {:#?}", interface.name_as_string(), iftype_payload);
                         interface.frequency = Some(freq);
                         retval.insert(interface.phy_name, interface);
                     }
@@ -230,18 +234,19 @@ impl NtSocket {
                                 }
                             }
                         }
-                        /*
-                        println!(
+
+                        /* println!(
                             "=========== CMD_NEW_WIPHY | Phy: {} | PhyName: {} ===========",
                             wiphy, wiphy_name
                         ); */
                         for attr in handle.get_attrs() {
                             match attr.nla_type.nla_type {
                                 Nl80211Attr::AttrSupportedIftypes => {
-                                    phy.iftypes = Some(decode_iftypes(
-                                        attr.get_payload_as_with_len()
-                                            .map_err(|err| err.to_string())?,
-                                    ));
+                                    let payload = attr
+                                        .get_payload_as_with_len()
+                                        .map_err(|err| err.to_string())?;
+                                    //println!("AttrSupported: {:#?}", payload);
+                                    phy.iftypes = Some(decode_iftypes(payload));
                                     phy.has_netlink = Some(true);
                                 }
                                 Nl80211Attr::AttrWiphyBands => {
@@ -265,7 +270,14 @@ impl NtSocket {
                                             Nl80211Bandc::Band5ghz => {
                                                 bandlist.band = WiFiBand::Band5GHz
                                             }
-                                            Nl80211Bandc::Band60ghz => {}
+                                            Nl80211Bandc::Band60ghz => {
+                                                bandlist.band = WiFiBand::Band60GHz
+                                            }
+                                            Nl80211Bandc::Band6ghz => {
+                                                bandlist.band = WiFiBand::Band6GHz
+                                            }
+                                            Nl80211Bandc::BandS1ghz => {}
+                                            Nl80211Bandc::BandLC => {}
                                             Nl80211Bandc::UnrecognizedConst(_) => {}
                                         }
                                         let bandhandle: AttrHandle<
@@ -302,8 +314,6 @@ impl NtSocket {
                                                                         channel.frequency = frequency;
                                                                         if let Some(chan) = WiFiChannel::from_frequency(frequency) {
                                                                             channel.channel = chan
-                                                                        } else {
-                                                                            println!("Unrecognized Frequency: {}", channel.frequency);
                                                                         }
                                                                     }
                                                                     Nl80211FrequencyAttr::FrequencyAttrDisabled => {
@@ -347,8 +357,10 @@ impl NtSocket {
                                     }
                                 }
                                 Nl80211Attr::AttrIftype => {
-                                    phy.current_iftype =
-                                        Some(attr.get_payload_as().map_err(|err| err.to_string())?);
+                                    let payload =
+                                        attr.get_payload_as().map_err(|err| err.to_string())?;
+                                    //println!("AttrIftype: {:#?}", payload);
+                                    phy.current_iftype = Some(payload);
                                 }
                                 _ => {} // TODO implement other attributes
                             }
