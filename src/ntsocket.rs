@@ -258,7 +258,7 @@ impl NtSocket {
                                     let bands = handle.get_attrs();
                                     let mut supported_bands: Vec<BandList> = Vec::new();
 
-                                    println!("Bandlist! {:#?} | Bands {:#?}", attr, bands);
+                                    //println!("Bandlist! {:#?} | Bands {:#?}", attr, bands);
 
                                     for band in bands {
                                         let mut bandlist = BandList::default();
