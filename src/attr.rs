@@ -861,14 +861,20 @@ impl NlAttrType for Nl80211ChannelType {}
 /// Enumeration from nl80211/nl80211.h:3490
 #[neli_enum(serialized_type = "u16")]
 pub enum Nl80211ChanWidth {
-    ChanWidth20Noht = 0,
-    ChanWidth20 = 1,
-    ChanWidth40 = 2,
-    ChanWidth80 = 3,
-    ChanWidth80p80 = 4,
-    ChanWidth160 = 5,
-    ChanWidth5 = 6,
-    ChanWidth10 = 7,
+    ChanWidth20Noht = 0, //20 MHz, non-HT channel
+    ChanWidth20 = 1,     //20 MHz HT channel
+    ChanWidth40 = 2, //40 MHz channel, the %NL80211_ATTR_CENTER_FREQ1 attribute must be provided as well
+    ChanWidth80 = 3, //80 MHz channel, the %NL80211_ATTR_CENTER_FREQ1 attribute must be provided as well
+    ChanWidth80p80 = 4, // 80+80 MHz channel, the %NL80211_ATTR_CENTER_FREQ1 and %NL80211_ATTR_CENTER_FREQ2 attributes must be provided as well
+    ChanWidth160 = 5, //160 MHz channel, the %NL80211_ATTR_CENTER_FREQ1 attribute must be provided as well
+    ChanWidth5 = 6,   //5 MHz OFDM channel
+    ChanWidth10 = 7,  //10 MHz OFDM channel
+    ChanWidth1 = 8,   //1 MHz OFDM channel
+    ChanWidth2 = 9,   //2 MHz OFDM channel
+    ChanWidth4 = 10,  //4 MHz OFDM channel
+    ChanWidth8 = 11,  //8 MHz OFDM channel
+    ChanWidth16 = 12, //16 MHz OFDM channel
+    ChanWidth320 = 13, //320 MHz channel, the %NL80211_ATTR_CENTER_FREQ1 attribute must be provided as well
 }
 
 impl NlAttrType for Nl80211ChanWidth {}
