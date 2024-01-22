@@ -56,13 +56,13 @@ impl RtSocket {
                     }
                     Err(p) => {
                         if format!("{}", p) != "This packet does not have a payload" {
-                            return Err(format!("{}", p));
+                            return Err(format!("(GET_INTERFACE_STATUS 1) {}", p));
                         }
                     }
                 },
                 Err(p) => {
-                    if format!("{}", p) != "This packet does not have a payload" {
-                        return Err(format!("{}", p));
+                    if format!("{}", p) != "This packet does not have a payload" && format!("{}", p) != "Netlink failure due to error: Wrapped IO error: No buffer space available (os error 105)" {
+                        return Err(format!("(GET_INTERFACE_STATUS 2) {}", p));
                     }
                 }
             }

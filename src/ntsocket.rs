@@ -55,7 +55,9 @@ impl NtSocket {
             Nlmsghdr::new(len, nl_type, flags, seq, pid, payload)
         };
 
-        self.sock.send(nlhdr).map_err(|e| e.to_string())?;
+        self.sock
+            .send(nlhdr)
+            .map_err(|e| format!("CMD_GET_INTERFACES {}", e))?;
 
         let iter = self
             .sock
@@ -66,7 +68,7 @@ impl NtSocket {
             let response = response.unwrap();
             match response.nl_type {
                 Nlmsg::Noop => (),
-                Nlmsg::Error => return Err("Error".to_string()),
+                Nlmsg::Error => return Err("Error (CMD_GET_INTERFACES)".to_string()),
                 Nlmsg::Done => break,
                 _ => {
                     if let Some(p) = response.nl_payload.get_payload() {
@@ -391,7 +393,9 @@ impl NtSocket {
             Nlmsghdr::new(len, nl_type, flags, seq, pid, payload)
         };
 
-        self.sock.send(nlhdr).map_err(|err| err.to_string())?;
+        self.sock
+            .send(nlhdr)
+            .map_err(|err| format!("CMD_GET_WIPHY {}", err))?;
 
         let iter = self
             .sock
@@ -586,7 +590,7 @@ impl NtSocket {
         chan_type: Nl80211ChannelType,
     ) -> Result<(), String> {
         let gmsghdr = Genlmsghdr::<Nl80211Cmd, Nl80211Attr>::new(
-            Nl80211Cmd::CmdSetWiphy,
+            Nl80211Cmd::CmdSetChannel,
             NL_80211_GENL_VERSION,
             {
                 let mut attrs = GenlBuffer::new();
@@ -633,7 +637,9 @@ impl NtSocket {
 
         // Send the Netlink message
 
-        let _ = self.sock.send(nlhdr).map_err(|err| err.to_string());
+        self.sock
+            .send(nlhdr)
+            .map_err(|err| format!("Send Err: {}", err))?;
 
         let iter = self
             .sock
@@ -645,10 +651,10 @@ impl NtSocket {
                 Nlmsg::Error => match response.nl_payload {
                     NlPayload::Ack(_ack) => continue,
                     NlPayload::Err(err) => {
-                        return Err(err.to_string());
+                        return Err(format!("NlPayload::Err {}", err));
                     }
                     NlPayload::Payload(p) => {
-                        return Err(format!("{:?}", p));
+                        return Err(format!("NlPayload::Payload {:?}", p));
                     }
                     NlPayload::Empty => {
                         return Err("Payload was empty".to_string());
