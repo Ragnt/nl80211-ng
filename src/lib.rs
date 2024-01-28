@@ -36,9 +36,9 @@ impl Nl80211 {
         let mut interfaces: HashMap<u32, Interface> = nt_socket.cmd_get_interfaces()?;
 
         for (phy, interface) in &mut interfaces {
-            if wirelessphys.contains_key(&phy) {
+            if wirelessphys.contains_key(phy) {
                 if let Some(index) = interface.index {
-                    interface.phy = wirelessphys.get(&phy).cloned();
+                    interface.phy = wirelessphys.get(phy).cloned();
                     interface.state = Some(rt_socket.get_interface_status(index)?);
                 }
             }
@@ -58,9 +58,9 @@ impl Nl80211 {
         let mut interfaces: HashMap<u32, Interface> = self.nt_socket.cmd_get_interfaces()?;
 
         for (phy, interface) in &mut interfaces {
-            if wirelessphys.contains_key(&phy) {
+            if wirelessphys.contains_key(phy) {
                 if let Some(index) = interface.index {
-                    interface.phy = wirelessphys.get(&phy).cloned();
+                    interface.phy = wirelessphys.get(phy).cloned();
                     interface.state = Some(self.rt_socket.get_interface_status(index)?);
                 }
             }
@@ -96,7 +96,7 @@ impl Nl80211 {
     pub fn set_interface_monitor(&mut self, active: bool, index: u32) -> Result<(), String> {
         self.nt_socket
             .set_type_vec(index, Nl80211Iftype::IftypeMonitor, active)?;
-        //self.update_interfaces()?;
+        self.update_interfaces()?;
         Ok(())
     }
 
