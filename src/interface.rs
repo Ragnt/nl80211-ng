@@ -12,7 +12,7 @@ use std::collections::HashMap;
 #[non_exhaustive]
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Interface {
-    pub index: Option<i32>,                    // AttrIfindex
+    pub index: Option<u32>,                    // AttrIfindex
     pub ssid: Option<Vec<u8>>,                 // AttrSsid
     pub mac: Option<Vec<u8>>,                  // AttrMac
     pub name: Option<Vec<u8>>,                 // AttrIfname

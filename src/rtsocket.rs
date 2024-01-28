@@ -22,7 +22,7 @@ impl RtSocket {
         Ok(Self { sock })
     }
 
-    pub fn get_interface_status(&mut self, interface: i32) -> Result<Operstate, String> {
+    pub fn get_interface_status(&mut self, interface: u32) -> Result<Operstate, String> {
         let nlmsg = Nlmsghdr::new(
             None,
             Rtm::Getlink,
@@ -32,7 +32,7 @@ impl RtSocket {
             NlPayload::Payload(Ifinfomsg::new(
                 RtAddrFamily::Packet,
                 Arphrd::Netrom,
-                interface,
+                interface.try_into().unwrap(),
                 IffFlags::empty(),
                 IffFlags::empty(),
                 RtBuffer::new(),
@@ -70,7 +70,7 @@ impl RtSocket {
         Ok(Operstate::Unknown)
     }
 
-    pub fn set_interface_mac_random(&mut self, interface_index: i32) -> Result<(), String> {
+    pub fn set_interface_mac_random(&mut self, interface_index: u32) -> Result<(), String> {
         let mut rtattr: RtBuffer<Ifla, neli::types::Buffer> = RtBuffer::new();
         let mac = generate_valid_mac();
         rtattr.push(Rtattr::new(None, Ifla::Address, &mac[..]).unwrap());
@@ -85,7 +85,7 @@ impl RtSocket {
                 NlPayload::Payload(Ifinfomsg::new(
                     RtAddrFamily::Unspecified,
                     Arphrd::None,
-                    interface_index,
+                    interface_index.try_into().unwrap(),
                     IffFlags::empty(),
                     IffFlags::empty(),
                     rtattr,
@@ -115,7 +115,7 @@ impl RtSocket {
         Ok(())
     }
 
-    pub fn set_interface_mac(&mut self, interface_index: i32, mac: &[u8; 6]) -> Result<(), String> {
+    pub fn set_interface_mac(&mut self, interface_index: u32, mac: &[u8; 6]) -> Result<(), String> {
         let mut rtattr = RtBuffer::new();
         rtattr.push(Rtattr::new(None, Ifla::Address, &mac[..]).unwrap());
 
@@ -129,7 +129,7 @@ impl RtSocket {
                 NlPayload::Payload(Ifinfomsg::new(
                     RtAddrFamily::Unspecified,
                     Arphrd::None,
-                    interface_index,
+                    interface_index.try_into().unwrap(),
                     IffFlags::empty(),
                     IffFlags::empty(),
                     rtattr,
@@ -159,7 +159,7 @@ impl RtSocket {
         Ok(())
     }
 
-    pub fn set_interface_up(&mut self, interface_index: i32) -> Result<(), String> {
+    pub fn set_interface_up(&mut self, interface_index: u32) -> Result<(), String> {
         self.sock
             .send(Nlmsghdr::new(
                 None,
@@ -170,7 +170,7 @@ impl RtSocket {
                 NlPayload::Payload(Ifinfomsg::up(
                     RtAddrFamily::Unspecified,
                     Arphrd::None,
-                    interface_index,
+                    interface_index.try_into().unwrap(),
                     RtBuffer::new(),
                 )),
             ))
@@ -198,7 +198,7 @@ impl RtSocket {
         Ok(())
     }
 
-    pub fn set_interface_down(&mut self, interface_index: i32) -> Result<(), String> {
+    pub fn set_interface_down(&mut self, interface_index: u32) -> Result<(), String> {
         let nlmsg = Nlmsghdr::new(
             None,
             Rtm::Newlink,
@@ -208,7 +208,7 @@ impl RtSocket {
             NlPayload::Payload(Ifinfomsg::down(
                 RtAddrFamily::Unspecified,
                 Arphrd::None,
-                interface_index,
+                interface_index.try_into().unwrap(),
                 RtBuffer::new(),
             )),
         );

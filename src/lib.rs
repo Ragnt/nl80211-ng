@@ -93,21 +93,21 @@ impl Nl80211 {
         &mut self.wirelessphys
     }
 
-    pub fn set_interface_monitor(&mut self, active: bool, index: i32) -> Result<(), String> {
+    pub fn set_interface_monitor(&mut self, active: bool, index: u32) -> Result<(), String> {
         self.nt_socket
             .set_type_vec(index, Nl80211Iftype::IftypeMonitor, active)?;
         //self.update_interfaces()?;
         Ok(())
     }
 
-    pub fn set_interface_station(&mut self, index: i32) -> Result<(), String> {
+    pub fn set_interface_station(&mut self, index: u32) -> Result<(), String> {
         self.nt_socket
             .set_type_vec(index, Nl80211Iftype::IftypeStation, false)?;
         self.update_interfaces()?;
         Ok(())
     }
 
-    pub fn set_interface_chan(&mut self, index: i32, channel: u8, band: u8) -> Result<(), String> {
+    pub fn set_interface_chan(&mut self, index: u32, channel: u8, band: u8) -> Result<(), String> {
         let band = WiFiBand::from_u8(band)?;
         self.nt_socket.set_frequency(
             index,
@@ -124,31 +124,31 @@ impl Nl80211 {
 
     // rtnetlink commands- all use interface index.
 
-    pub fn set_interface_up(&mut self, index: i32) -> Result<(), String> {
+    pub fn set_interface_up(&mut self, index: u32) -> Result<(), String> {
         self.rt_socket.set_interface_up(index)?;
         self.update_interfaces()?;
         Ok(())
     }
 
-    pub fn set_interface_down(&mut self, index: i32) -> Result<(), String> {
+    pub fn set_interface_down(&mut self, index: u32) -> Result<(), String> {
         self.rt_socket.set_interface_down(index)?;
         self.update_interfaces()?;
         Ok(())
     }
 
-    pub fn set_interface_mac(&mut self, index: i32, mac: &[u8; 6]) -> Result<(), String> {
+    pub fn set_interface_mac(&mut self, index: u32, mac: &[u8; 6]) -> Result<(), String> {
         self.rt_socket.set_interface_mac(index, mac)?;
         self.update_interfaces()?;
         Ok(())
     }
 
-    pub fn set_interface_mac_random(&mut self, index: i32) -> Result<(), String> {
+    pub fn set_interface_mac_random(&mut self, index: u32) -> Result<(), String> {
         self.rt_socket.set_interface_mac_random(index)?;
         self.update_interfaces()?;
         Ok(())
     }
 
-    fn get_interface_state(&mut self, index: i32) -> Result<Operstate, String> {
+    fn get_interface_state(&mut self, index: u32) -> Result<Operstate, String> {
         self.rt_socket.get_interface_status(index)
     }
 }
@@ -175,7 +175,7 @@ fn get_interfaces_info() -> Result<HashMap<u32, Interface>, String> {
     Ok(interfaces)
 }
 
-pub fn get_interface_info_idx(interface_index: i32) -> Result<Interface, String> {
+pub fn get_interface_info_idx(interface_index: u32) -> Result<Interface, String> {
     let mut nt_socket: NtSocket = NtSocket::connect()?;
     let mut rt_socket: RtSocket = RtSocket::connect()?;
 
@@ -219,19 +219,19 @@ pub fn get_interface_info_name(interface_name: &String) -> Result<Interface, Str
     Err("Interface Not Found".to_string())
 }
 
-pub fn set_interface_monitor(interface_index: i32, active: bool) -> Result<(), String> {
+pub fn set_interface_monitor(interface_index: u32, active: bool) -> Result<(), String> {
     let mut nt_socket = NtSocket::connect()?;
     nt_socket.set_type_vec(interface_index, Nl80211Iftype::IftypeMonitor, active)?;
     Ok(())
 }
 
-pub fn set_interface_station(interface_index: i32) -> Result<(), String> {
+pub fn set_interface_station(interface_index: u32) -> Result<(), String> {
     let mut nt_socket = NtSocket::connect()?;
     nt_socket.set_type_vec(interface_index, Nl80211Iftype::IftypeStation, false)?;
     Ok(())
 }
 
-pub fn set_interface_chan(interface_index: i32, channel: u8, band: u8) -> Result<(), String> {
+pub fn set_interface_chan(interface_index: u32, channel: u8, band: u8) -> Result<(), String> {
     let mut nt_socket = NtSocket::connect()?;
     let band = WiFiBand::from_u8(band)?;
     nt_socket.set_frequency(
@@ -248,31 +248,31 @@ pub fn set_interface_chan(interface_index: i32, channel: u8, band: u8) -> Result
 
 // rtnetlink commands- all use interface index.
 
-pub fn set_interface_up(interface_index: i32) -> Result<(), String> {
+pub fn set_interface_up(interface_index: u32) -> Result<(), String> {
     let mut rt_socket = RtSocket::connect()?;
     rt_socket.set_interface_up(interface_index)?;
     Ok(())
 }
 
-pub fn set_interface_down(interface_index: i32) -> Result<(), String> {
+pub fn set_interface_down(interface_index: u32) -> Result<(), String> {
     let mut rt_socket = RtSocket::connect()?;
     rt_socket.set_interface_down(interface_index)?;
     Ok(())
 }
 
-pub fn set_interface_mac(interface_index: i32, mac: &[u8; 6]) -> Result<(), String> {
+pub fn set_interface_mac(interface_index: u32, mac: &[u8; 6]) -> Result<(), String> {
     let mut rt_socket = RtSocket::connect()?;
     rt_socket.set_interface_mac(interface_index, mac)?;
     Ok(())
 }
 
-pub fn set_interface_mac_random(interface_index: i32) -> Result<(), String> {
+pub fn set_interface_mac_random(interface_index: u32) -> Result<(), String> {
     let mut rt_socket = RtSocket::connect()?;
     rt_socket.set_interface_mac_random(interface_index)?;
     Ok(())
 }
 // This should only be called when "updating" an interface, so we won't update it after doing this.
-fn get_interface_state(interface_index: i32) -> Result<Operstate, String> {
+fn get_interface_state(interface_index: u32) -> Result<Operstate, String> {
     let mut rt_socket = RtSocket::connect().map_err(|e| e.to_string())?;
     rt_socket.get_interface_status(interface_index)
 }

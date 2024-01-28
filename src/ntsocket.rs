@@ -438,7 +438,7 @@ impl NtSocket {
 
     pub fn set_type_vec(
         &mut self,
-        interface_index: i32,
+        interface_index: u32,
         iftype: Nl80211Iftype,
         active: bool,
     ) -> Result<(), String> {
@@ -521,7 +521,7 @@ impl NtSocket {
         Ok(())
     }
 
-    pub fn set_powersave_off(&mut self, interface_index: i32) -> Result<(), String> {
+    pub fn set_powersave_off(&mut self, interface_index: u32) -> Result<(), String> {
         let gmsghdr = Genlmsghdr::<Nl80211Cmd, Nl80211Attr>::new(
             Nl80211Cmd::CmdSetWiphy,
             NL_80211_GENL_VERSION,
@@ -584,7 +584,7 @@ impl NtSocket {
 
     pub fn set_frequency(
         &mut self,
-        interface_index: i32,
+        interface_index: u32,
         frequency: u32,
         chan_width: Nl80211ChanWidth,
         chan_type: Nl80211ChannelType,
