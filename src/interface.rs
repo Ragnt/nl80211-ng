@@ -2,6 +2,7 @@ use crate::attr::Nl80211Iftype;
 use crate::attr::Operstate;
 use crate::channels::pretty_print_band_lists;
 use crate::channels::BandList;
+use crate::channels::FrequencyStatus;
 use crate::phy::iftypes_to_string_list;
 use crate::phy::Frequency;
 use crate::phy::WirelessPhy;
@@ -50,7 +51,9 @@ impl Interface {
                     let bandu8 = band.band.to_u8();
                     let mut channels: Vec<u8> = Vec::new();
                     for channel in band.channels {
-                        channels.push(channel.channel.get_channel_number())
+                        if channel.status == FrequencyStatus::Enabled {
+                            channels.push(channel.channel.get_channel_number())
+                        }
                     }
                     map.insert(bandu8, channels);
                 }
