@@ -132,6 +132,7 @@ impl Interface {
             output.push_str(line);
             output.push('\n');
         }
+        output.push_str("Enabled Bands/Channels:\n\n");
         output.push_str(&pretty_print_band_lists(
             &self
                 .phy

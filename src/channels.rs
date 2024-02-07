@@ -66,8 +66,8 @@ pub fn map_str_to_band_and_channel(channel_str: &str) -> Option<(WiFiBand, u8)> 
 pub enum WiFiBand {
     Band2GHz,
     Band5GHz,
-    Band6GHz,
     Band60GHz,
+    Band6GHz,
 }
 
 impl WiFiBand {
@@ -128,31 +128,34 @@ impl Default for BandList {
 pub fn pretty_print_band_lists(band_lists: &[BandList]) -> String {
     let mut output = String::new();
     for band_list in band_lists {
-        output += &format!("{:?}:\n", band_list.band);
-        let mut line = String::new();
-        let mut count = 0;
-        for channel in &band_list.channels {
-            if channel.status == FrequencyStatus::Enabled {
-                let channel_str = match channel.channel {
-                    WiFiChannel::Channel2GHz(ch) => format!("{}", ch),
-                    WiFiChannel::Channel5GHz(ch) => format!("{}", ch),
-                    WiFiChannel::Channel6GHz(ch) => format!("{}", ch),
-                    WiFiChannel::Channel60GHz(ch) => format!("{}", ch),
-                };
+        if band_list.channels.iter().any(|channel| channel.status == FrequencyStatus::Enabled)
+        {
+            output += &format!("{:?}:\n", band_list.band);
+            let mut line = String::new();
+            let mut count = 0;
+            for channel in &band_list.channels {
+                if channel.status == FrequencyStatus::Enabled {
+                    let channel_str = match channel.channel {
+                        WiFiChannel::Channel2GHz(ch) => format!("{}", ch),
+                        WiFiChannel::Channel5GHz(ch) => format!("{}", ch),
+                        WiFiChannel::Channel6GHz(ch) => format!("{}.6e", ch),
+                        WiFiChannel::Channel60GHz(ch) => format!("{}.ay", ch),
+                    };
 
-                line += &format!("    [{} ({})]", channel.frequency, channel_str);
-                count += 1;
+                    line += &format!("    [{} ({})]", channel.frequency, channel_str);
+                    count += 1;
 
-                if count % 6 == 0 {
-                    line += "\n";
+                    if count % 6 == 0 {
+                        line += "\n";
+                    }
                 }
             }
-        }
-        if !line.ends_with('\n') {
+            if !line.ends_with('\n') {
+                line += "\n";
+            }
             line += "\n";
+            output += &line;
         }
-        line += "\n";
-        output += &line;
     }
     output
 }

@@ -22,8 +22,8 @@ pub const NL_80211_GENL_VERSION: u8 = 1;
 pub struct Nl80211 {
     pub nt_socket: NtSocket,
     pub rt_socket: RtSocket,
-    wirelessphys: HashMap<u32, WirelessPhy>,
-    interfaces: HashMap<u32, Interface>,
+    pub wirelessphys: HashMap<u32, WirelessPhy>,
+    pub interfaces: HashMap<u32, Interface>,
 }
 
 impl Nl80211 {
@@ -75,6 +75,10 @@ impl Nl80211 {
             let string = interface.pretty_print();
             println!("{}", string);
         }
+    }
+
+    pub fn interface(&self, idx: u32) -> Option<Interface> {
+        self.interfaces.values().find(|f| f.index == Some(idx)).cloned()
     }
 
     pub fn get_interfaces(&self) -> &HashMap<u32, Interface> {

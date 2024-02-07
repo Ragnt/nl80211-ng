@@ -177,7 +177,16 @@ impl NtSocket {
             NL_80211_GENL_VERSION,
             {
                 let mut attrs = GenlBuffer::new();
-                attrs.push(Nlattr::new(false, false, Nl80211Attr::AttrWiphy, phy).unwrap()); // This should force the kernel to split the messages
+                attrs.push(Nlattr::new(false, false, Nl80211Attr::AttrWiphy, phy).unwrap());
+                attrs.push(Nlattr {
+                    nla_len: 4,
+                    nla_type: AttrType {
+                        nla_nested: false,
+                        nla_network_order: false,
+                        nla_type: Nl80211Attr::AttrSplitWiphyDump,
+                    },
+                    nla_payload: Buffer::new(),
+                });
                 attrs
             },
         );
@@ -185,9 +194,9 @@ impl NtSocket {
         let nlhdr: Nlmsghdr<u16, Genlmsghdr<Nl80211Cmd, Nl80211Attr>> = {
             let len = None;
             let nl_type = self.family_id;
-            let flags = NlmFFlags::new(&[NlmF::Request]);
+            let flags = NlmFFlags::new(&[NlmF::Request, NlmF::Ack, NlmF::Root, NlmF::Match]);
             let seq = None;
-            let pid = None;
+            let pid = Some(42069);
             let payload = NlPayload::Payload(msghdr);
             Nlmsghdr::new(len, nl_type, flags, seq, pid, payload)
         };
@@ -237,17 +246,12 @@ impl NtSocket {
                             }
                         }
 
-                        /* println!(
-                            "=========== CMD_NEW_WIPHY | Phy: {} | PhyName: {} ===========",
-                            wiphy, wiphy_name
-                        ); */
                         for attr in handle.get_attrs() {
                             match attr.nla_type.nla_type {
                                 Nl80211Attr::AttrSupportedIftypes => {
                                     let payload = attr
                                         .get_payload_as_with_len()
                                         .map_err(|err| err.to_string())?;
-                                    //println!("AttrSupported: {:#?}", payload);
                                     phy.iftypes = Some(decode_iftypes(payload));
                                     phy.has_netlink = Some(true);
                                 }
@@ -259,8 +263,6 @@ impl NtSocket {
                                     > = attr.get_attr_handle().unwrap();
                                     let bands = handle.get_attrs();
                                     let mut supported_bands: Vec<BandList> = Vec::new();
-
-                                    //println!("Bandlist! {:#?} | Bands {:#?}", attr, bands);
 
                                     for band in bands {
                                         let mut bandlist = BandList::default();
@@ -282,11 +284,11 @@ impl NtSocket {
                                             Nl80211Bandc::BandLC => {}
                                             Nl80211Bandc::UnrecognizedConst(_) => {}
                                         }
-                                        let bandhandle: AttrHandle<
-                                            '_,
-                                            GenlBuffer<Nl80211BandAttr, Buffer>,
-                                            Nlattr<Nl80211BandAttr, Buffer>,
-                                        > = band.get_attr_handle().unwrap();
+
+
+                                        let bandhandle = band.get_attr_handle().unwrap();
+
+                                        
                                         for bandattr in bandhandle.get_attrs() {
                                             match bandattr.nla_type.nla_type {
                                                 Nl80211BandAttr::BandAttrFreqs => {
@@ -345,7 +347,15 @@ impl NtSocket {
                                         supported_bands.push(bandlist);
                                     }
                                     if !supported_bands.is_empty() {
-                                        phy.frequency_list = Some(supported_bands);
+                                        let frequency_list = phy.frequency_list.get_or_insert_with(Vec::new);
+                                    
+                                        for new_band in supported_bands {
+                                            if let Some(existing_band) = frequency_list.iter_mut().find(|b| b.band == new_band.band) {
+                                                existing_band.channels.extend(new_band.channels);
+                                            } else {
+                                                frequency_list.push(new_band);
+                                            }
+                                        }
                                     }
                                 }
                                 Nl80211Attr::AttrFeatureFlags => {
