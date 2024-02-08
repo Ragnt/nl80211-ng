@@ -1,6 +1,5 @@
 use super::attr::{Nl80211ChanWidth, Nl80211Iftype};
 use super::channels::BandList;
-use super::WiFiChannel;
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct WirelessPhy {
@@ -19,16 +18,16 @@ pub struct WirelessPhy {
 pub struct Frequency {
     pub frequency: Option<u32>,
     pub width: Option<Nl80211ChanWidth>,
-    pub channel: Option<WiFiChannel>,
+    pub channel: Option<u32>,
     pub pwr: Option<u32>,
 }
 
 impl Default for Frequency {
     fn default() -> Self {
         Frequency {
-            frequency: Some(2412),
+            frequency: None,
             width: Some(Nl80211ChanWidth::ChanWidth20Noht),
-            channel: Some(WiFiChannel::Channel2GHz(1)),
+            channel: None,
             pwr: Some(0),
         }
     }
@@ -37,7 +36,11 @@ impl Default for Frequency {
 impl Frequency {
     pub fn print(&self) -> String {
         if let Some(freq) = self.frequency {
-            format!("{} ({})", freq, self.channel.clone().unwrap())
+            format!("{} ({})", freq, if let Some(chan) = self.channel {
+                chan.to_string()
+            } else {
+                "Unknown".to_string()
+            })
         } else {
             "None".to_string()
         }

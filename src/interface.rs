@@ -41,18 +41,18 @@ impl Interface {
         }
     }
 
-    pub fn get_frequency_list_simple(&self) -> Option<HashMap<u8, Vec<u8>>> {
+    pub fn get_frequency_list_simple(&self) -> Option<HashMap<u8, Vec<u32>>> {
         match &self.phy {
             Some(wirelessphy) => {
                 let phy = wirelessphy.clone();
-                let mut map: HashMap<u8, Vec<u8>> = HashMap::new();
+                let mut map: HashMap<u8, Vec<u32>> = HashMap::new();
                 let freq_list = phy.frequency_list.unwrap();
                 for band in freq_list {
                     let bandu8 = band.band.to_u8();
-                    let mut channels: Vec<u8> = Vec::new();
+                    let mut channels: Vec<u32> = Vec::new();
                     for channel in band.channels {
                         if channel.status == FrequencyStatus::Enabled {
-                            channels.push(channel.channel.get_channel_number())
+                            channels.push(channel.channel)
                         }
                     }
                     map.insert(bandu8, channels);

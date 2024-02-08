@@ -14,11 +14,9 @@ use neli::genl::{Genlmsghdr, Nlattr};
 use neli::nl::{NlPayload, Nlmsghdr};
 use neli::socket::NlSocketHandle;
 use neli::types::{Buffer, GenlBuffer};
-use neli::ToBytes;
 
 use std::collections::HashMap;
 use std::fs;
-use std::io::Cursor;
 
 /// A generic netlink socket to send commands and receive messages
 pub struct NtSocket {
@@ -138,9 +136,9 @@ impl NtSocket {
                                     freq.frequency =
                                         Some(attr.get_payload_as().map_err(|err| err.to_string())?);
                                     freq.channel = Some(
-                                        WiFiChannel::from_frequency(freq.frequency.unwrap())
-                                            .unwrap(),
+                                        chan_from_frequency(freq.frequency.unwrap()),
                                     );
+
                                 }
                                 // Channel Type (Width)
                                 Nl80211Attr::AttrChannelWidth => {
@@ -316,9 +314,8 @@ impl NtSocket {
                                                                     Nl80211FrequencyAttr::FrequencyAttrFreq => {
                                                                         let frequency: u32 = freqattr.get_payload_as().map_err(|err| err.to_string())?;
                                                                         channel.frequency = frequency;
-                                                                        if let Some(chan) = WiFiChannel::from_frequency(frequency) {
-                                                                            channel.channel = chan
-                                                                        }
+                                                                        channel.channel = chan_from_frequency(frequency)
+                                                                        
                                                                     }
                                                                     Nl80211FrequencyAttr::FrequencyAttrDisabled => {
                                                                         channel.status = FrequencyStatus::Disabled;

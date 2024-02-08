@@ -9,7 +9,7 @@ pub fn decode_iftypes(bytes: Vec<u8>) -> Vec<Nl80211Iftype> {
                 let chunk_array: [u8; 4] = chunk.try_into().expect("slice with incorrect length");
 
                 // Interpret the chunk as two u16s
-                let (len, typecode) = (
+                let (_, typecode) = (
                     u16::from_ne_bytes([chunk_array[0], chunk_array[1]]),
                     u16::from_ne_bytes([chunk_array[2], chunk_array[3]]),
                 );
