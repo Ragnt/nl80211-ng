@@ -63,109 +63,115 @@ impl NtSocket {
             .iter::<Nlmsg, Genlmsghdr<Nl80211Cmd, Nl80211Attr>>(false);
 
         let mut retval: HashMap<u32, Interface> = HashMap::new();
-        for response in iter {
-            let response = response.unwrap();
-            match response.nl_type {
-                Nlmsg::Noop => (),
-                Nlmsg::Error => return Err("Error (CMD_GET_INTERFACES)".to_string()),
-                Nlmsg::Done => break,
-                _ => {
-                    if let Some(p) = response.nl_payload.get_payload() {
-                        if p.cmd != Nl80211Cmd::CmdNewInterface {
-                            continue;
-                        }
-                        let handle = p.get_attr_handle();
-                        let mut freq: Frequency = Frequency::default();
-
-                        let wiphy: u32 = handle
-                            .get_attribute(Nl80211Attr::AttrWiphy)
-                            .unwrap()
-                            .get_payload_as()
-                            .unwrap();
-
-                        let mut interface = Interface::new(wiphy);
-
-                        // Get iftype
-                        let iftype_payload: u32 = handle
-                            .get_attribute(Nl80211Attr::AttrIftype)
-                            .unwrap()
-                            .get_payload_as()
-                            .unwrap();
-
-                        let lsb: u8 = (iftype_payload & 0xFF) as u8;
-
-                        let iftype =
-                            Nl80211Iftype::from_u8(lsb).unwrap_or(Nl80211Iftype::IftypeUnspecified);
-                        interface.current_iftype = Some(iftype);
-
-                        // Iterate other attributes
-                        for attr in handle.iter() {
-                            match attr.nla_type.nla_type {
-                                // IfIndex (eg: wlan0)
-                                Nl80211Attr::AttrIfindex => {
-                                    interface.index =
-                                        Some(attr.get_payload_as().map_err(|err| err.to_string())?);
+        for res in iter {
+            match res {
+                Ok(response) => {
+                    match response.nl_type {
+                        Nlmsg::Noop => (),
+                        Nlmsg::Error => return Err("Error (CMD_GET_INTERFACES)".to_string()),
+                        Nlmsg::Done => break,
+                        _ => {
+                            if let Some(p) = response.nl_payload.get_payload() {
+                                if p.cmd != Nl80211Cmd::CmdNewInterface {
+                                    continue;
                                 }
-                                // IFNAME (eg: wlan0)
-                                Nl80211Attr::AttrIfname => {
-                                    interface.name = Some(
-                                        attr.get_payload_as_with_len()
-                                            .map_err(|err| err.to_string())?,
-                                    );
-                                }
-                                // Mac Address of the interface
-                                Nl80211Attr::AttrMac => {
-                                    let mut mac = Vec::new();
-                                    let vecmac: Vec<u8> = attr
-                                        .get_payload_as_with_len()
-                                        .map_err(|err| err.to_string())?;
-                                    for byte in vecmac {
-                                        mac.push(byte);
+                                let handle = p.get_attr_handle();
+                                let mut freq: Frequency = Frequency::default();
+        
+                                let wiphy: u32 = handle
+                                    .get_attribute(Nl80211Attr::AttrWiphy)
+                                    .unwrap()
+                                    .get_payload_as()
+                                    .unwrap();
+        
+                                let mut interface = Interface::new(wiphy);
+        
+                                // Get iftype
+                                let iftype_payload: u32 = handle
+                                    .get_attribute(Nl80211Attr::AttrIftype)
+                                    .unwrap()
+                                    .get_payload_as()
+                                    .unwrap();
+        
+                                let lsb: u8 = (iftype_payload & 0xFF) as u8;
+        
+                                let iftype =
+                                    Nl80211Iftype::from_u8(lsb).unwrap_or(Nl80211Iftype::IftypeUnspecified);
+                                interface.current_iftype = Some(iftype);
+        
+                                // Iterate other attributes
+                                for attr in handle.iter() {
+                                    match attr.nla_type.nla_type {
+                                        // IfIndex (eg: wlan0)
+                                        Nl80211Attr::AttrIfindex => {
+                                            interface.index =
+                                                Some(attr.get_payload_as().map_err(|err| err.to_string())?);
+                                        }
+                                        // IFNAME (eg: wlan0)
+                                        Nl80211Attr::AttrIfname => {
+                                            interface.name = Some(
+                                                attr.get_payload_as_with_len()
+                                                    .map_err(|err| err.to_string())?,
+                                            );
+                                        }
+                                        // Mac Address of the interface
+                                        Nl80211Attr::AttrMac => {
+                                            let mut mac = Vec::new();
+                                            let vecmac: Vec<u8> = attr
+                                                .get_payload_as_with_len()
+                                                .map_err(|err| err.to_string())?;
+                                            for byte in vecmac {
+                                                mac.push(byte);
+                                            }
+        
+                                            interface.mac = Some(mac);
+                                        }
+                                        // The SSID the interface is associated with
+                                        Nl80211Attr::AttrSsid => {
+                                            interface.ssid = Some(
+                                                attr.get_payload_as_with_len()
+                                                    .map_err(|err| err.to_string())?,
+                                            );
+                                        }
+                                        // The frequency the wireless interface is using
+                                        Nl80211Attr::AttrWiphyFreq => {
+                                            freq.frequency =
+                                                Some(attr.get_payload_as().map_err(|err| err.to_string())?);
+                                            freq.channel = Some(
+                                                chan_from_frequency(freq.frequency.unwrap()),
+                                            );
+        
+                                        }
+                                        // Channel Type (Width)
+                                        Nl80211Attr::AttrChannelWidth => {
+                                            freq.width =
+                                                Some(attr.get_payload_as().map_err(|err| err.to_string())?);
+                                        }
+                                        // Transmission Power Level
+                                        Nl80211Attr::AttrWiphyTxPowerLevel => {
+                                            freq.pwr =
+                                                Some(attr.get_payload_as().map_err(|err| err.to_string())?);
+                                        }
+                                        // Wireless Device
+                                        Nl80211Attr::AttrWdev => {
+                                            interface.device =
+                                                Some(attr.get_payload_as().map_err(|err| err.to_string())?)
+                                        }
+                                        _ => (),
                                     }
-
-                                    interface.mac = Some(mac);
                                 }
-                                // The SSID the interface is associated with
-                                Nl80211Attr::AttrSsid => {
-                                    interface.ssid = Some(
-                                        attr.get_payload_as_with_len()
-                                            .map_err(|err| err.to_string())?,
-                                    );
-                                }
-                                // The frequency the wireless interface is using
-                                Nl80211Attr::AttrWiphyFreq => {
-                                    freq.frequency =
-                                        Some(attr.get_payload_as().map_err(|err| err.to_string())?);
-                                    freq.channel = Some(
-                                        chan_from_frequency(freq.frequency.unwrap()),
-                                    );
-
-                                }
-                                // Channel Type (Width)
-                                Nl80211Attr::AttrChannelWidth => {
-                                    freq.width =
-                                        Some(attr.get_payload_as().map_err(|err| err.to_string())?);
-                                }
-                                // Transmission Power Level
-                                Nl80211Attr::AttrWiphyTxPowerLevel => {
-                                    freq.pwr =
-                                        Some(attr.get_payload_as().map_err(|err| err.to_string())?);
-                                }
-                                // Wireless Device
-                                Nl80211Attr::AttrWdev => {
-                                    interface.device =
-                                        Some(attr.get_payload_as().map_err(|err| err.to_string())?)
-                                }
-                                _ => (),
+        
+                                interface.frequency = Some(freq);
+                                retval.insert(interface.phy_name, interface);
                             }
                         }
-
-                        //println!("{:#?} :: {:#?}", interface.name_as_string(), iftype_payload);
-                        interface.frequency = Some(freq);
-                        retval.insert(interface.phy_name, interface);
                     }
+                },
+                Err(e) => {
+                    return Err(format!("Error ({e})").to_string());
                 }
             }
+            
         }
         Ok(retval)
     }
@@ -234,6 +240,8 @@ impl NtSocket {
                             .map_err(|err| err.to_string())?;
                         phy.phy_name = Some(wiphy_name.clone());
 
+                        let mut freq: Frequency = Frequency::default();
+
                         let driver_path =
                             format!("/sys/class/ieee80211/{}/device/driver", wiphy_name.clone());
 
@@ -247,6 +255,28 @@ impl NtSocket {
 
                         for attr in handle.get_attrs() {
                             match attr.nla_type.nla_type {
+                                Nl80211Attr::AttrWiphyFreq => {
+                                    freq.frequency =
+                                        Some(attr.get_payload_as().map_err(|err| err.to_string())?);
+                                    freq.channel = Some(
+                                        chan_from_frequency(freq.frequency.unwrap()),
+                                    );
+                                    phy.frequency = Some(freq.clone());
+                                }
+                                // Channel Type (Width)
+                                Nl80211Attr::AttrChannelWidth => {
+                                    freq.width =
+                                        Some(attr.get_payload_as().map_err(|err| err.to_string())?);
+                                    phy.frequency = Some(freq.clone());
+
+                                }
+                                // Transmission Power Level
+                                Nl80211Attr::AttrWiphyTxPowerLevel => {
+                                    freq.pwr =
+                                        Some(attr.get_payload_as().map_err(|err| err.to_string())?);
+                                    phy.frequency = Some(freq.clone());
+
+                                }
                                 Nl80211Attr::AttrSupportedIftypes => {
                                     let payload = attr
                                         .get_payload_as_with_len()

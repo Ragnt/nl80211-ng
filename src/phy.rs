@@ -12,6 +12,7 @@ pub struct WirelessPhy {
     pub driver: Option<String>,                // Driver information
     pub has_netlink: Option<bool>,             // If Interface has netlink
     pub active_monitor: Option<bool>,          // If Interface has netlink
+    pub frequency: Option<Frequency>,          // If Interface has netlink
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
