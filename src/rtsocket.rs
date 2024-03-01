@@ -1,3 +1,5 @@
+use std::fmt;
+
 use crate::attr::*;
 
 extern crate rand;
@@ -10,9 +12,16 @@ use neli::socket::NlSocketHandle;
 use neli::types::RtBuffer;
 use rand::Rng;
 
-#[derive(Debug)]
 pub struct RtSocket {
     pub(crate) sock: NlSocketHandle,
+}
+
+impl fmt::Debug for RtSocket {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("NtSocket")
+            .field("sock", &format_args!("<NlSocketHandle>"))
+            .finish()
+    }
 }
 
 impl RtSocket {

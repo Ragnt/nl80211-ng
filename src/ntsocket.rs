@@ -16,13 +16,22 @@ use neli::socket::NlSocketHandle;
 use neli::types::{Buffer, GenlBuffer};
 
 use std::collections::HashMap;
+use std::fmt;
 use std::fs;
 
 /// A generic netlink socket to send commands and receive messages
-#[derive(Debug)]
 pub struct NtSocket {
     pub(crate) sock: NlSocketHandle,
     pub(crate) family_id: u16,
+}
+
+impl fmt::Debug for NtSocket {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("NtSocket")
+            .field("sock", &format_args!("<NlSocketHandle>"))
+            .field("family_id", &self.family_id)
+            .finish()
+    }
 }
 
 impl NtSocket {
