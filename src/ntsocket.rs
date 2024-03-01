@@ -19,6 +19,7 @@ use std::collections::HashMap;
 use std::fs;
 
 /// A generic netlink socket to send commands and receive messages
+#[derive(Debug)]
 pub struct NtSocket {
     pub(crate) sock: NlSocketHandle,
     pub(crate) family_id: u16,

@@ -10,6 +10,7 @@ use neli::socket::NlSocketHandle;
 use neli::types::RtBuffer;
 use rand::Rng;
 
+#[derive(Debug)]
 pub struct RtSocket {
     pub(crate) sock: NlSocketHandle,
 }
