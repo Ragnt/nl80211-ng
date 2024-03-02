@@ -140,7 +140,7 @@ impl Interface {
                 .unwrap()
                 .frequency_list
                 .clone()
-                .unwrap_or(vec![BandList::default()]),
+                .unwrap_or(vec![BandList::default()]), 4
         ));
 
         wrap_in_box(&output)
