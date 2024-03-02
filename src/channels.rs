@@ -90,7 +90,7 @@ impl Default for BandList {
     }
 }
 
-pub fn pretty_print_band_lists(band_lists: &[BandList]) -> String {
+pub fn pretty_print_band_lists(band_lists: &[BandList], width: usize) -> String {
     let mut output = String::new();
     for band_list in band_lists {
         if band_list.channels.iter().any(|channel| channel.status == FrequencyStatus::Enabled)
@@ -111,7 +111,7 @@ pub fn pretty_print_band_lists(band_lists: &[BandList]) -> String {
                     line += &format!("{:<17}", chanline);
                     count += 1;
 
-                    if count % 6 == 0 {
+                    if count % width == 0 {
                         line += "\n  ";
                     }
                 }
