@@ -249,8 +249,6 @@ impl NtSocket {
                             .map_err(|err| err.to_string())?;
                         phy.phy_name = Some(wiphy_name.clone());
 
-                        let mut freq: Frequency = Frequency::default();
-
                         let driver_path =
                             format!("/sys/class/ieee80211/{}/device/driver", wiphy_name.clone());
 
@@ -265,25 +263,22 @@ impl NtSocket {
                         for attr in handle.get_attrs() {
                             match attr.nla_type.nla_type {
                                 Nl80211Attr::AttrWiphyFreq => {
-                                    freq.frequency =
+                                    phy.frequency.frequency =
                                         Some(attr.get_payload_as().map_err(|err| err.to_string())?);
-                                    freq.channel = Some(
-                                        chan_from_frequency(freq.frequency.unwrap()),
+                                    phy.frequency.channel = Some(
+                                        chan_from_frequency(phy.frequency.frequency.unwrap()),
                                     );
-                                    phy.frequency = Some(freq.clone());
                                 }
                                 // Channel Type (Width)
                                 Nl80211Attr::AttrChannelWidth => {
-                                    freq.width =
+                                    phy.frequency.width =
                                         Some(attr.get_payload_as().map_err(|err| err.to_string())?);
-                                    phy.frequency = Some(freq.clone());
 
                                 }
                                 // Transmission Power Level
                                 Nl80211Attr::AttrWiphyTxPowerLevel => {
-                                    freq.pwr =
+                                    phy.frequency.pwr =
                                         Some(attr.get_payload_as().map_err(|err| err.to_string())?);
-                                    phy.frequency = Some(freq.clone());
 
                                 }
                                 Nl80211Attr::AttrSupportedIftypes => {
@@ -415,7 +410,6 @@ impl NtSocket {
                             }
                         }
                     }
-                    //println!("=====================================");
                 }
             }
         }
