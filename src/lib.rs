@@ -126,6 +126,14 @@ impl Nl80211 {
         Ok(())
     }
 
+    pub fn set_powersave_off(&mut self, index: u32) -> Result<(), String> {
+        self.nt_socket.set_powersave_off(
+            index,
+        )?;
+        self.update_interfaces()?;
+        Ok(())
+    }
+
     // rtnetlink commands- all use interface index.
 
     pub fn set_interface_up(&mut self, index: u32) -> Result<(), String> {
@@ -243,6 +251,14 @@ pub fn set_interface_chan(interface_index: u32, channel: u32, band: u8) -> Resul
         chan_to_frequency(channel, band),
         Nl80211ChanWidth::ChanWidth20Noht,
         Nl80211ChannelType::ChanNoHt,
+    )?;
+    Ok(())
+}
+
+pub fn set_powersave_off(index: u32) -> Result<(), String> {
+    let mut nt_socket = NtSocket::connect()?;
+    nt_socket.set_powersave_off(
+        index,
     )?;
     Ok(())
 }
