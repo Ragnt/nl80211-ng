@@ -74,8 +74,9 @@ impl NtSocket {
         let mut retval: HashMap<u32, Interface> = HashMap::new();
         let mut response_count = 0;
 
+        let mut interfaces: HashMap<u32, Interface> = HashMap::new();
+
         for res in iter {
-            response_count += 1;
             match res {
                 Ok(response) => {
                     match response.nl_type {
@@ -95,11 +96,16 @@ impl NtSocket {
                                     .get_payload_as()
                                     .unwrap();
         
-                                let mut interface = Interface::new(wiphy);
         
                                 // Get iftype
                                 let iftype_payload: u32 = handle
                                     .get_attribute(Nl80211Attr::AttrIftype)
+                                    .unwrap()
+                                    .get_payload_as()
+                                    .unwrap();
+
+                                let index: u32 = handle
+                                    .get_attribute(Nl80211Attr::AttrIfindex)
                                     .unwrap()
                                     .get_payload_as()
                                     .unwrap();
@@ -108,9 +114,12 @@ impl NtSocket {
         
                                 let iftype =
                                     Nl80211Iftype::from_u8(lsb).unwrap_or(Nl80211Iftype::IftypeUnspecified);
+                                
+                                let interface = interfaces.entry(index).or_insert(Interface::new(wiphy));
+                                
+                                interface.index = Some(index);
                                 interface.current_iftype = Some(iftype);
                             
-        
                                 // Iterate other attributes
                                 for attr in handle.iter() {
                                     match attr.nla_type.nla_type {
@@ -171,9 +180,7 @@ impl NtSocket {
                                         }
                                         _ => (),
                                     }
-                                }
-        
-                                retval.insert(interface.phy_name, interface);
+                                }        
                             }
                         }
                     }
@@ -182,7 +189,9 @@ impl NtSocket {
                     return Err(format!("Error ({e})").to_string());
                 }
             }
-            
+        }
+        for interface in interfaces.values() {
+            retval.insert(interface.phy_name, interface.clone());
         }
         Ok(retval)
     }
