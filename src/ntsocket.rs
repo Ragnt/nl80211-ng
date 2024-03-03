@@ -267,11 +267,7 @@ impl NtSocket {
                         }
 
 
-                        println!("======================================");
-                        println!("GetWiphyResponse {}: {} ({})", response_count, wiphy, wiphy_name);
-                        println!("Attributes:");
                         for attr in handle.get_attrs() {
-                            println!("Attr: {:?} | {:?}", attr.nla_type.nla_type, attr.nla_payload);
                             match attr.nla_type.nla_type {
                                 Nl80211Attr::AttrWiphyFreq => {
                                     phy.frequency.frequency =
