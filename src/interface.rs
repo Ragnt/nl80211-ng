@@ -22,7 +22,7 @@ pub struct Interface {
     pub phy_name: u32,                         // AttrWiphy
     pub device: Option<u64>,                   // Attr
     pub current_iftype: Option<Nl80211Iftype>, // AttrIftype
-    pub frequency: Option<Frequency>,          // PHY's operating frequency
+    pub frequency: Frequency,          // PHY's operating frequency
 }
 
 impl Interface {
@@ -37,7 +37,7 @@ impl Interface {
             phy_name: wiphy,
             device: None,
             current_iftype: None,
-            frequency: None,
+            frequency: Frequency::default(),
         }
     }
 
@@ -114,11 +114,7 @@ impl Interface {
             "State: {:?}",
             self.state.clone().unwrap_or(Operstate::Unknown)
         );
-        let freq = if let Some(freq) = &self.frequency {
-            freq.print()
-        } else {
-            "None".to_string()
-        };
+        let freq = &self.frequency.print();
         let frequency_line = format!("Current Frequency: {}", freq);
         let lines = [
             interface_line,

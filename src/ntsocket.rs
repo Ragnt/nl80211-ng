@@ -72,7 +72,10 @@ impl NtSocket {
             .iter::<Nlmsg, Genlmsghdr<Nl80211Cmd, Nl80211Attr>>(false);
 
         let mut retval: HashMap<u32, Interface> = HashMap::new();
+        let mut response_count = 0;
+
         for res in iter {
+            response_count += 1;
             match res {
                 Ok(response) => {
                     match response.nl_type {
@@ -85,7 +88,6 @@ impl NtSocket {
                                     continue;
                                 }
                                 let handle = p.get_attr_handle();
-                                let mut freq: Frequency = Frequency::default();
         
                                 let wiphy: u32 = handle
                                     .get_attribute(Nl80211Attr::AttrWiphy)
@@ -107,6 +109,7 @@ impl NtSocket {
                                 let iftype =
                                     Nl80211Iftype::from_u8(lsb).unwrap_or(Nl80211Iftype::IftypeUnspecified);
                                 interface.current_iftype = Some(iftype);
+                            
         
                                 // Iterate other attributes
                                 for attr in handle.iter() {
@@ -144,21 +147,21 @@ impl NtSocket {
                                         }
                                         // The frequency the wireless interface is using
                                         Nl80211Attr::AttrWiphyFreq => {
-                                            freq.frequency =
+                                            interface.frequency.frequency =
                                                 Some(attr.get_payload_as().map_err(|err| err.to_string())?);
-                                            freq.channel = Some(
-                                                chan_from_frequency(freq.frequency.unwrap()),
+                                                interface.frequency.channel = Some(
+                                                chan_from_frequency(interface.frequency.frequency.unwrap()),
                                             );
         
                                         }
                                         // Channel Type (Width)
                                         Nl80211Attr::AttrChannelWidth => {
-                                            freq.width =
+                                            interface.frequency.width =
                                                 Some(attr.get_payload_as().map_err(|err| err.to_string())?);
                                         }
                                         // Transmission Power Level
                                         Nl80211Attr::AttrWiphyTxPowerLevel => {
-                                            freq.pwr =
+                                            interface.frequency.pwr =
                                                 Some(attr.get_payload_as().map_err(|err| err.to_string())?);
                                         }
                                         // Wireless Device
@@ -170,7 +173,6 @@ impl NtSocket {
                                     }
                                 }
         
-                                interface.frequency = Some(freq);
                                 retval.insert(interface.phy_name, interface);
                             }
                         }
@@ -222,9 +224,11 @@ impl NtSocket {
             .iter::<Nlmsg, Genlmsghdr<Nl80211Cmd, Nl80211Attr>>(false);
 
         let mut phy = WirelessPhy::default();
+        let mut response_count = 0;
 
         for response in iter {
             let response = response.unwrap();
+            response_count += 1;
             match response.nl_type {
                 Nlmsg::Noop => (),
                 Nlmsg::Error => panic!("Error with netlink during cmd_get_split_wiphy()"),
@@ -234,6 +238,8 @@ impl NtSocket {
                         if p.cmd != Nl80211Cmd::CmdNewWiphy {
                             continue;
                         }
+
+
                         let handle = p.get_attr_handle();
                         let wiphy: u32 = handle
                             .get_attribute(Nl80211Attr::AttrWiphy)
@@ -260,7 +266,12 @@ impl NtSocket {
                             }
                         }
 
+
+                        println!("======================================");
+                        println!("GetWiphyResponse {}: {} ({})", response_count, wiphy, wiphy_name);
+                        println!("Attributes:");
                         for attr in handle.get_attrs() {
+                            println!("Attr: {:?} | {:?}", attr.nla_type.nla_type, attr.nla_payload);
                             match attr.nla_type.nla_type {
                                 Nl80211Attr::AttrWiphyFreq => {
                                     phy.frequency.frequency =
