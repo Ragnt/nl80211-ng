@@ -72,9 +72,6 @@ impl NtSocket {
             .iter::<Nlmsg, Genlmsghdr<Nl80211Cmd, Nl80211Attr>>(false);
 
         let mut retval: HashMap<u32, Interface> = HashMap::new();
-        let mut response_count = 0;
-
-        let mut interfaces: HashMap<u32, Interface> = HashMap::new();
 
         for res in iter {
             match res {
@@ -103,21 +100,14 @@ impl NtSocket {
                                     .unwrap()
                                     .get_payload_as()
                                     .unwrap();
-
-                                let index: u32 = handle
-                                    .get_attribute(Nl80211Attr::AttrIfindex)
-                                    .unwrap()
-                                    .get_payload_as()
-                                    .unwrap();
         
                                 let lsb: u8 = (iftype_payload & 0xFF) as u8;
         
                                 let iftype =
                                     Nl80211Iftype::from_u8(lsb).unwrap_or(Nl80211Iftype::IftypeUnspecified);
                                 
-                                let interface = interfaces.entry(index).or_insert(Interface::new(wiphy));
+                                let interface = retval.entry(wiphy).or_insert(Interface::new(wiphy));
                                 
-                                interface.index = Some(index);
                                 interface.current_iftype = Some(iftype);
                             
                                 // Iterate other attributes
@@ -189,9 +179,6 @@ impl NtSocket {
                     return Err(format!("Error ({e})").to_string());
                 }
             }
-        }
-        for interface in interfaces.values() {
-            retval.insert(interface.phy_name, interface.clone());
         }
         Ok(retval)
     }
