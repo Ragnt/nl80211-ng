@@ -218,11 +218,9 @@ impl NtSocket {
             .iter::<Nlmsg, Genlmsghdr<Nl80211Cmd, Nl80211Attr>>(false);
 
         let mut phy = WirelessPhy::default();
-        let mut response_count = 0;
 
         for response in iter {
             let response = response.unwrap();
-            response_count += 1;
             match response.nl_type {
                 Nlmsg::Noop => (),
                 Nlmsg::Error => panic!("Error with netlink during cmd_get_split_wiphy()"),
@@ -564,6 +562,8 @@ impl NtSocket {
     }
 
     pub fn set_powersave_off(&mut self, interface_index: u32) -> Result<(), String> {
+        let mut buffer = Buffer::new();
+        buffer.extend_from_slice(&[0;4]);
         let gmsghdr = Genlmsghdr::<Nl80211Cmd, Nl80211Attr>::new(
             Nl80211Cmd::CmdSetPowerSave,
             NL_80211_GENL_VERSION,
@@ -573,13 +573,15 @@ impl NtSocket {
                     Nlattr::new(false, false, Nl80211Attr::AttrIfindex, interface_index).unwrap(),
                 );
                 attrs.push(
-                    Nlattr::new(
-                        false,
-                        false,
-                        Nl80211Attr::AttrPsState,
-                        Nl80211PsState::PsDisabled,
-                    )
-                    .unwrap(),
+                    Nlattr {
+                        nla_len: 8,
+                        nla_type: AttrType {
+                            nla_nested: false,
+                            nla_network_order: false,
+                            nla_type: Nl80211Attr::AttrPsState,
+                        },
+                        nla_payload: buffer,
+                    },
                 );
                 attrs
             },
@@ -594,7 +596,7 @@ impl NtSocket {
             let payload = NlPayload::Payload(gmsghdr);
             Nlmsghdr::new(len, nl_type, flags, seq, pid, payload)
         };
-
+        
         // Send the Netlink message
         self.sock.send(nlhdr).map_err(|err| err.to_string())?;
 
