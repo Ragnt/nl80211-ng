@@ -93,7 +93,6 @@ impl NtSocket {
                                     .get_payload_as()
                                     .unwrap();
         
-        
                                 // Get iftype
                                 let iftype_payload: u32 = handle
                                     .get_attribute(Nl80211Attr::AttrIftype)
@@ -148,10 +147,9 @@ impl NtSocket {
                                         Nl80211Attr::AttrWiphyFreq => {
                                             interface.frequency.frequency =
                                                 Some(attr.get_payload_as().map_err(|err| err.to_string())?);
-                                                interface.frequency.channel = Some(
+                                            interface.frequency.channel = Some(
                                                 chan_from_frequency(interface.frequency.frequency.unwrap()),
                                             );
-        
                                         }
                                         // Channel Type (Width)
                                         Nl80211Attr::AttrChannelWidth => {
@@ -567,7 +565,7 @@ impl NtSocket {
 
     pub fn set_powersave_off(&mut self, interface_index: u32) -> Result<(), String> {
         let gmsghdr = Genlmsghdr::<Nl80211Cmd, Nl80211Attr>::new(
-            Nl80211Cmd::CmdSetWiphy,
+            Nl80211Cmd::CmdSetPowerSave,
             NL_80211_GENL_VERSION,
             {
                 let mut attrs = GenlBuffer::new();
