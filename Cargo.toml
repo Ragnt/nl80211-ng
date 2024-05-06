@@ -4,7 +4,7 @@ version = "0.5.5"
 edition = "2021"
 description = "Basic nl80211 crate for interacting with Netlink / Rtnetlink and manipulating WiFi interfaces."
 license = "MIT"
-homepage = "https://github.com/Ragnt/nl80211-ng"
+repository = "https://github.com/Ragnt/nl80211-ng"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
