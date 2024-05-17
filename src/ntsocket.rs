@@ -9,6 +9,7 @@ use crate::util::decode_iftypes;
 use crate::{NL_80211_GENL_NAME, NL_80211_GENL_VERSION};
 use neli::attr::{AttrHandle, Attribute};
 use neli::consts::{nl::NlmF, nl::NlmFFlags, nl::Nlmsg, socket::NlFamily};
+use neli::err::NlError;
 use neli::genl::AttrType;
 use neli::genl::{Genlmsghdr, Nlattr};
 use neli::nl::{NlPayload, Nlmsghdr};
@@ -46,7 +47,7 @@ impl NtSocket {
         Ok(Self { sock, family_id })
     }
 
-    pub fn cmd_get_interfaces(&mut self) -> Result<HashMap<u32, Interface>, String> {
+    pub fn cmd_get_interfaces(&mut self) -> Result<HashMap<u32, Interface>, NlError<neli::consts::nl::Nlmsg, Genlmsghdr<Nl80211Cmd, Nl80211Attr>>> {
         let msghdr = Genlmsghdr::<Nl80211Cmd, Nl80211Attr>::new(
             Nl80211Cmd::CmdGetInterface,
             NL_80211_GENL_VERSION,
@@ -64,8 +65,7 @@ impl NtSocket {
         };
 
         self.sock
-            .send(nlhdr)
-            .map_err(|e| format!("CMD_GET_INTERFACES {}", e))?;
+            .send(nlhdr)?;
 
         let iter = self
             .sock
@@ -78,7 +78,7 @@ impl NtSocket {
                 Ok(response) => {
                     match response.nl_type {
                         Nlmsg::Noop => (),
-                        Nlmsg::Error => return Err("Error (CMD_GET_INTERFACES)".to_string()),
+                        Nlmsg::Error => return Err(NlError::Msg("Error".to_owned())),
                         Nlmsg::Done => break,
                         _ => {
                             if let Some(p) = response.nl_payload.get_payload() {
@@ -88,17 +88,11 @@ impl NtSocket {
                                 let handle = p.get_attr_handle();
         
                                 let wiphy: u32 = handle
-                                    .get_attribute(Nl80211Attr::AttrWiphy)
-                                    .unwrap()
-                                    .get_payload_as()
-                                    .unwrap();
+                                    .get_attr_payload_as(Nl80211Attr::AttrWiphy)?; // The proper way
         
                                 // Get iftype
                                 let iftype_payload: u32 = handle
-                                    .get_attribute(Nl80211Attr::AttrIftype)
-                                    .unwrap()
-                                    .get_payload_as()
-                                    .unwrap();
+                                    .get_attr_payload_as(Nl80211Attr::AttrIftype)?;
         
                                 let lsb: u8 = (iftype_payload & 0xFF) as u8;
         
@@ -115,13 +109,12 @@ impl NtSocket {
                                         // IfIndex (eg: wlan0)
                                         Nl80211Attr::AttrIfindex => {
                                             interface.index =
-                                                Some(attr.get_payload_as().map_err(|err| err.to_string())?);
+                                                Some(attr.get_payload_as()?);
                                         }
                                         // IFNAME (eg: wlan0)
                                         Nl80211Attr::AttrIfname => {
                                             interface.name = Some(
-                                                attr.get_payload_as_with_len()
-                                                    .map_err(|err| err.to_string())?,
+                                                attr.get_payload_as_with_len()?,
                                             );
                                         }
                                         // Mac Address of the interface
@@ -129,7 +122,7 @@ impl NtSocket {
                                             let mut mac = Vec::new();
                                             let vecmac: Vec<u8> = attr
                                                 .get_payload_as_with_len()
-                                                .map_err(|err| err.to_string())?;
+                                                ?;
                                             for byte in vecmac {
                                                 mac.push(byte);
                                             }
@@ -139,14 +132,13 @@ impl NtSocket {
                                         // The SSID the interface is associated with
                                         Nl80211Attr::AttrSsid => {
                                             interface.ssid = Some(
-                                                attr.get_payload_as_with_len()
-                                                    .map_err(|err| err.to_string())?,
+                                                attr.get_payload_as_with_len()?,
                                             );
                                         }
                                         // The frequency the wireless interface is using
                                         Nl80211Attr::AttrWiphyFreq => {
                                             interface.frequency.frequency =
-                                                Some(attr.get_payload_as().map_err(|err| err.to_string())?);
+                                                Some(attr.get_payload_as()?);
                                             interface.frequency.channel = Some(
                                                 chan_from_frequency(interface.frequency.frequency.unwrap()),
                                             );
@@ -154,17 +146,17 @@ impl NtSocket {
                                         // Channel Type (Width)
                                         Nl80211Attr::AttrChannelWidth => {
                                             interface.frequency.width =
-                                                Some(attr.get_payload_as().map_err(|err| err.to_string())?);
+                                                Some(attr.get_payload_as()?);
                                         }
                                         // Transmission Power Level
                                         Nl80211Attr::AttrWiphyTxPowerLevel => {
                                             interface.frequency.pwr =
-                                                Some(attr.get_payload_as().map_err(|err| err.to_string())?);
+                                                Some(attr.get_payload_as()?);
                                         }
                                         // Wireless Device
                                         Nl80211Attr::AttrWdev => {
                                             interface.device =
-                                                Some(attr.get_payload_as().map_err(|err| err.to_string())?)
+                                                Some(attr.get_payload_as()?)
                                         }
                                         _ => (),
                                     }
@@ -174,7 +166,7 @@ impl NtSocket {
                     }
                 },
                 Err(e) => {
-                    return Err(format!("Error ({e})").to_string());
+                    return Err(e);
                 }
             }
         }
